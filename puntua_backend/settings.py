@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'organization',
     'employee',
     'shift',
+    'main',
 
      'oauth2_provider',
     'social_django',

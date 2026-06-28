@@ -27,6 +27,16 @@ class Employee(models.Model):
         blank=True,
         related_name='employees'
     )
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('active', 'Active/Accepted'),
+        ('declined', 'Declined'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
     is_active = models.BooleanField(default=True)
     joined_at = models.DateField(default=timezone.now, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

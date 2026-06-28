@@ -1,6 +1,8 @@
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterAPIView, LoginAPIView, logout_view,VerifySocialLogin
+from .views import (
+    RegisterAPIView, LoginAPIView, logout_view, VerifySocialLogin
+)
 
 urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name='register'),

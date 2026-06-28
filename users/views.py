@@ -184,12 +184,8 @@ def VerifySocialLogin(request, backend):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def keep_alive_view(request):
-    """
-    Heartbeat endpoint for preventing service from sleeping.
-    """
-    print('Service is awake')
-    return Response({"status": "active", "message": "Service is awake"}, status=status.HTTP_200_OK)
+
+
+
+
 
