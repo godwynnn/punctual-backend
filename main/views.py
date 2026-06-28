@@ -1,7 +1,7 @@
 import json
 import time
 from django.shortcuts import render
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, JsonResponse
 from django.utils import timezone
 from django.conf import settings
 from django.core.mail import send_mail
@@ -19,19 +19,20 @@ from organization.models import Organization
 
 User = get_user_model()
 
+from django.db import connection
+
 def sse_event_stream(user):
-    # Sends initial connection message
+    # 1. Sends initial connection message
     yield "data: {\"status\": \"connected\"}\n\n"
     
-    last_checked = timezone.now()
-    while True:
-        # Fetch unread notifications or new notifications since last checked
-        new_notifications = Notification.objects.filter(
+    # 2. Immediately send all existing unread notifications on initial connection
+    try:
+        unread_notifications = Notification.objects.filter(
             recipient=user,
-            created_at__gt=last_checked
+            is_read=False
         ).order_by('created_at')
         
-        for notif in new_notifications:
+        for notif in unread_notifications:
             payload = {
                 'id': notif.id,
                 'title': notif.title,
@@ -41,27 +42,61 @@ def sse_event_stream(user):
                 'created_at': notif.created_at.isoformat()
             }
             yield f"data: {json.dumps(payload)}\n\n"
+    except Exception as e:
+        print(f"Error sending initial notifications: {e}")
+    finally:
+        connection.close()
+        
+    last_checked = timezone.now()
+    
+    # 3. Stream loop for subsequent new notifications
+    while True:
+        try:
+            new_notifications = Notification.objects.filter(
+                recipient=user,
+                created_at__gt=last_checked
+            ).order_by('created_at')
             
-        last_checked = timezone.now()
+            current_check_time = timezone.now()
+            for notif in new_notifications:
+                payload = {
+                    'id': notif.id,
+                    'title': notif.title,
+                    'message': notif.message,
+                    'notification_type': notif.notification_type,
+                    'organization_id': notif.organization.id if notif.organization else None,
+                    'created_at': notif.created_at.isoformat()
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+                
+            last_checked = current_check_time
+        except Exception as e:
+            print(f"Error in SSE loop: {e}")
+        finally:
+            connection.close()
+            
         time.sleep(3)
 
-@api_view(['GET'])
-@permission_classes([AllowAny]) # We authorize manually inside because EventSource doesn't support custom headers
 def sse_notifications(request):
+    if request.method != 'GET':
+        return JsonResponse({'detail': 'Method not allowed'}, status=405)
+
     token_str = request.GET.get('token')
     if not token_str:
-        return Response({'detail': 'Token parameter required'}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({'detail': 'Token parameter required'}, status=401)
         
     try:
         access_token = AccessToken(token_str)
         user_id = access_token['user_id']
         user = User.objects.get(id=user_id)
     except Exception as e:
-        return Response({'detail': f'Invalid or expired token: {str(e)}'}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({'detail': f'Invalid or expired token: {str(e)}'}, status=401)
         
     response = StreamingHttpResponse(sse_event_stream(user), content_type="text/event-stream")
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
+    response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = '*'
     return response
 
 @api_view(['GET'])
