@@ -5,9 +5,20 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+    employee = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'employee_id', 'first_name', 'last_name')
+        fields = ('id', 'email', 'employee_id', 'first_name', 'last_name', 'employee')
+
+    def get_employee(self, obj):
+        try:
+            if hasattr(obj, 'employee') and obj.employee:
+                from employee.serializers import EmployeeSerializer
+                return EmployeeSerializer(obj.employee).data
+        except Exception:
+            pass
+        return None
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)

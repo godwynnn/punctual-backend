@@ -21,6 +21,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'allow_ussd',
             'allow_remote',
             'qr_refresh_interval',
+            'start_time',
+            'duration',
+            'location_data',
             'created_at',
             'updated_at'
         )

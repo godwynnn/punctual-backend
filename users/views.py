@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, UserSerializer
@@ -183,6 +183,11 @@ def VerifySocialLogin(request, backend):
             {"status": "failed", "error": str(e)},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile_view(request):
+    return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
 
 
 

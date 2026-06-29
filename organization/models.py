@@ -22,6 +22,9 @@ class Organization(models.Model):
     allow_ussd = models.BooleanField(default=False)
     allow_remote = models.BooleanField(default=False)
     qr_refresh_interval = models.IntegerField(default=40, help_text="QR refresh interval in seconds")
+    start_time = models.TimeField(null=True, blank=True, help_text="Daily operational start time")
+    duration = models.IntegerField(null=True, blank=True, help_text="Daily operational duration in hours")
+    location_data = models.JSONField(null=True, blank=True, help_text="Metadata from geolocation API")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

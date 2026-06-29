@@ -21,6 +21,26 @@ User = get_user_model()
 
 from django.db import connection
 
+def get_notification_payload(notif):
+    invite_status = None
+    if notif.notification_type == 'invitation' and notif.organization:
+        try:
+            employee = Employee.objects.get(user=notif.recipient, organization=notif.organization)
+            invite_status = employee.status
+        except Employee.DoesNotExist:
+            invite_status = 'pending'
+            
+    return {
+        'id': notif.id,
+        'title': notif.title,
+        'message': notif.message,
+        'notification_type': notif.notification_type,
+        'organization_id': notif.organization.id if notif.organization else None,
+        'invite_status': invite_status,
+        'is_read': notif.is_read,
+        'created_at': notif.created_at.isoformat()
+    }
+
 def sse_event_stream(user):
     # 1. Sends initial connection message
     yield "data: {\"status\": \"connected\"}\n\n"
@@ -33,14 +53,7 @@ def sse_event_stream(user):
         ).order_by('created_at')
         
         for notif in unread_notifications:
-            payload = {
-                'id': notif.id,
-                'title': notif.title,
-                'message': notif.message,
-                'notification_type': notif.notification_type,
-                'organization_id': notif.organization.id if notif.organization else None,
-                'created_at': notif.created_at.isoformat()
-            }
+            payload = get_notification_payload(notif)
             yield f"data: {json.dumps(payload)}\n\n"
     except Exception as e:
         print(f"Error sending initial notifications: {e}")
@@ -59,14 +72,7 @@ def sse_event_stream(user):
             
             current_check_time = timezone.now()
             for notif in new_notifications:
-                payload = {
-                    'id': notif.id,
-                    'title': notif.title,
-                    'message': notif.message,
-                    'notification_type': notif.notification_type,
-                    'organization_id': notif.organization.id if notif.organization else None,
-                    'created_at': notif.created_at.isoformat()
-                }
+                payload = get_notification_payload(notif)
                 yield f"data: {json.dumps(payload)}\n\n"
                 
             last_checked = current_check_time
@@ -105,15 +111,7 @@ def list_notifications(request):
     notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:20]
     data = []
     for notif in notifications:
-        data.append({
-            'id': notif.id,
-            'title': notif.title,
-            'message': notif.message,
-            'notification_type': notif.notification_type,
-            'organization_id': notif.organization.id if notif.organization else None,
-            'is_read': notif.is_read,
-            'created_at': notif.created_at.isoformat()
-        })
+        data.append(get_notification_payload(notif))
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
@@ -129,7 +127,12 @@ def accept_invitation(request, org_id):
         employee = Employee.objects.get(user=request.user, organization_id=org_id)
         employee.status = 'active'
         employee.save()
-        return Response({'status': 'success', 'message': 'You have successfully joined the organization.'}, status=status.HTTP_200_OK)
+        from users.serializers import UserSerializer
+        return Response({
+            'status': 'success', 
+            'message': 'You have successfully joined the organization.',
+            'user': UserSerializer(request.user).data
+        }, status=status.HTTP_200_OK)
     except Employee.DoesNotExist:
         return Response({'error': 'Invitation or employee record not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -140,7 +143,12 @@ def decline_invitation(request, org_id):
         employee = Employee.objects.get(user=request.user, organization_id=org_id)
         employee.status = 'declined'
         employee.save()
-        return Response({'status': 'success', 'message': 'You have declined the invitation.'}, status=status.HTTP_200_OK)
+        from users.serializers import UserSerializer
+        return Response({
+            'status': 'success', 
+            'message': 'You have declined the invitation.',
+            'user': UserSerializer(request.user).data
+        }, status=status.HTTP_200_OK)
     except Employee.DoesNotExist:
         return Response({'error': 'Invitation or employee record not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -149,6 +157,8 @@ def decline_invitation(request, org_id):
 def invite_employee(request):
     email = request.data.get('email')
     org_id = request.data.get('organization_id')
+    
+    shift_id = request.data.get('shift_id')
     
     if not email or not org_id:
         return Response({'error': 'Email and organization_id are required fields.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -180,11 +190,17 @@ def invite_employee(request):
         defaults={
             'organization': organization,
             'position': 'Site Crew',
-            'department': 'Operations'
+            'department': 'Operations',
+            'shift_id': shift_id
         }
     )
     if not created:
         employee.organization = organization
+        if shift_id:
+            employee.shift_id = shift_id
+        employee.save()
+    elif shift_id:
+        employee.shift_id = shift_id
         employee.save()
         
     notification = Notification.objects.create(
