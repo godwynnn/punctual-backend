@@ -28,6 +28,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
             'check_in',
             'check_out',
             'status',
+            'method',
             'created_at',
             'updated_at'
         )

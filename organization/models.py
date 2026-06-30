@@ -18,6 +18,7 @@ class Organization(models.Model):
     office_longitude = models.DecimalField(max_digits=12, decimal_places=9, null=True, blank=True)
     allowed_radius = models.FloatField(default=100.0, help_text="Allowed radius in meters")
     require_qr = models.BooleanField(default=False)
+    auto_qr_session = models.BooleanField(default=False)
     require_gps = models.BooleanField(default=False)
     allow_ussd = models.BooleanField(default=False)
     allow_remote = models.BooleanField(default=False)

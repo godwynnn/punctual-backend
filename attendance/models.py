@@ -47,7 +47,15 @@ class Attendance(models.Model):
     date = models.DateField(default=timezone.now)
     check_in = models.DateTimeField(blank=True, null=True)
     check_out = models.DateTimeField(blank=True, null=True)
+    METHOD_CHOICES = [
+        ('manual', 'Manual'),
+        ('qr', 'QR Code'),
+        ('social_wa', 'WhatsApp'),
+        ('social_tl', 'Telegram'),
+    ]
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='manual')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

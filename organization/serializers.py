@@ -17,6 +17,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'office_longitude',
             'allowed_radius',
             'require_qr',
+            'auto_qr_session',
             'require_gps',
             'allow_ussd',
             'allow_remote',
