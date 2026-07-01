@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'employee_id', 'first_name', 'last_name', 'employee')
+        fields = ('id', 'email', 'employee_id', 'first_name', 'last_name', 'phone_no', 'employee')
 
     def get_employee(self, obj):
         try:
@@ -50,5 +50,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'email': self.user.email,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
+            'phone_no': self.user.phone_no,
         }
         return data

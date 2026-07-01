@@ -21,6 +21,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'require_gps',
             'allow_ussd',
             'allow_remote',
+            'use_social',
             'qr_refresh_interval',
             'start_time',
             'duration',

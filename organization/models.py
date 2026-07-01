@@ -22,6 +22,7 @@ class Organization(models.Model):
     require_gps = models.BooleanField(default=False)
     allow_ussd = models.BooleanField(default=False)
     allow_remote = models.BooleanField(default=False)
+    use_social = models.BooleanField(default=False)
     qr_refresh_interval = models.IntegerField(default=40, help_text="QR refresh interval in seconds")
     start_time = models.TimeField(null=True, blank=True, help_text="Daily operational start time")
     duration = models.IntegerField(null=True, blank=True, help_text="Daily operational duration in hours")

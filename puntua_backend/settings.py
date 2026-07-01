@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # Third party apps
     'corsheaders',
     'rest_framework',
+    'django_rq',
     
     # Local apps
     'users',
@@ -118,6 +119,8 @@ elif ENV=='prod':
     }
 }
 
+
+ 
 
 
 # Password validation
@@ -232,3 +235,18 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
+
+
+
+
+# Redis Queue (django_rq) Configuration
+RQ_QUEUES = {
+     'default': {
+         'HOST': os.getenv('REDIS_HOST', 'localhost'),
+         'PORT': int(os.getenv('REDIS_PORT', 6379)),
+         'DB': int(os.getenv('REDIS_DB', 0)),
+         'PASSWORD': os.getenv('REDIS_PASSWORD', None),
+         'DEFAULT_TIMEOUT': 360,
+       'ASYNC': False,  # Executes tasks instantly in-process for development
+     }
+ }

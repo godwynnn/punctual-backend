@@ -3,7 +3,7 @@ from .models import Organization
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'slug', 'allowed_radius', 'require_qr', 'require_gps', 'owner', 'created_at')
+    list_display = ('id', 'name', 'slug', 'allowed_radius', 'require_qr', 'require_gps', 'use_social', 'owner', 'created_at')
     search_fields = ('name', 'attendance_id', 'owner__email', 'owner__employee_id')
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ('id', 'created_at', 'updated_at')
@@ -19,7 +19,7 @@ class OrganizationAdmin(admin.ModelAdmin):
             'fields': ('office_latitude', 'office_longitude', 'allowed_radius')
         }),
         ('Verification Policies', {
-            'fields': ('require_qr', 'require_gps', 'allow_ussd', 'allow_remote', 'qr_refresh_interval')
+            'fields': ('require_qr', 'require_gps', 'allow_ussd', 'allow_remote', 'use_social', 'qr_refresh_interval')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

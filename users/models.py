@@ -51,6 +51,7 @@ class User(AbstractUser):
     employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    phone_no = models.CharField(max_length=30, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

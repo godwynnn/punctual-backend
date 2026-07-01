@@ -37,6 +37,7 @@ class Employee(models.Model):
         choices=STATUS_CHOICES,
         default='pending'
     )
+    whatsapp_no = models.CharField(max_length=30, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     joined_at = models.DateField(default=timezone.now, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -18,6 +18,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'department',
             'shift',
             'status',
+            'whatsapp_no',
             'is_active',
             'today_attendance',
             'joined_at',
