@@ -63,6 +63,16 @@ class Attendance(models.Model):
         # Prevent duplicate attendance for an employee on the same date
         unique_together = ('employee', 'date')
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            from attendance.sse_manager import sse_manager
+            from organization.serializers import EmployeeAttendanceSerializer
+            serializer = EmployeeAttendanceSerializer(self)
+            sse_manager.notify(self.organization.id, serializer.data)
+        except Exception as e:
+            print("Failed to send real-time attendance update via SSE:", e)
+
     def __str__(self):
         user_email = self.employee.user.email if self.employee and self.employee.user else "No User"
         return f"{user_email} - {self.date} ({self.status})"

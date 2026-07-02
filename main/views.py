@@ -211,13 +211,13 @@ def invite_employee(request):
         notification_type='invitation'
     )
     
-    subject = f'Invitation to join {organization.name} on TraceFlow'
-    message = f'Hi {first_name},\n\nYou have been invited to join "{organization.name}" on TraceFlow.\nLog in to your account or register using this email to view your shifts.\n\nBest regards,\nTraceFlow Team'
+    subject = f'Invitation to join {organization.name} on PunctualHr'
+    message = f'Hi {first_name},\n\nYou have been invited to join "{organization.name}" on PunctualHr.\nLog in to your account or register using this email to view your shifts.\n\nBest regards,\nPunctualHr Team'
     try:
         send_mail(
             subject,
             message,
-            settings.DEFAULT_FROM_EMAIL or 'noreply@traceflow.com',
+            settings.DEFAULT_FROM_EMAIL or 'noreply@punctualhr.com',
             [email],
             fail_silently=True
         )
