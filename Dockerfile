@@ -19,4 +19,4 @@ RUN pip install -r requirements.txt
 
 # Copy the project code into the container
 COPY . /app/
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "puntua_backend.wsgi:application", "--bind", "0.0.0.0:8000"]
