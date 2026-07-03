@@ -1,17 +1,17 @@
 services:
   - type: web
     plan: free
-    name: qrmarket
+    name: punctuahr
     runtime: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn core.wsgi:application"
+    buildCommand: chmod a+x build.sh && ./build.sh
+    startCommand: gunicorn puntua_backend.wsgi:application
   
     envVars:
     - key: DJANGO_SETTINGS_MODULE
-      value: core.settings
+      value: puntua_backend.settings
     - key: ENV
       value: prod
     - key: BACKEND_URL
-      value: https://qrmarket.onrender.com
+      value: https://punctuahr.onrender.com
 
     
