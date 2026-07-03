@@ -9,16 +9,17 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 
-# Upgrade pip and install Python dependencies
+RUN apt-get update
+
+
 RUN pip install --upgrade pip
+# Install dependencies
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
+# RUN THE STATIC COLLECTION HERE
+RUN python manage.py collectstatic --no-input
+
 # Copy the project code into the container
 COPY . /app/
-
-# Optional: If you had Django steps in your build.sh, uncomment these:
-# RUN python manage.py collectstatic --no-input
-
-# Start the application using Render's assigned port variable
-CMD ["sh", "-c", "gunicorn puntua_backend.wsgi:application --bind 0.0.0.0:$PORT"]
+CMD ["gunicorn", "puntua_backend.wsgi:application", "--bind", "0.0.0.0:8000"]
