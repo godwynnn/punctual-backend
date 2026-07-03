@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'employee',
     'shift',
     'main',
+    'task',
 
      'oauth2_provider',
     'social_django',

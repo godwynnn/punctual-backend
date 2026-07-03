@@ -14,3 +14,9 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'puntua_backend.settings')
 
 application = get_wsgi_application()
+try:
+    from puntua_backend.cron import start_scheduler
+    start_scheduler()
+    print("[Cron] Scheduler initialized")
+except (ImportError, Exception) as e:
+    print(f"[Cron] Error initializing scheduler: {str(e)}")

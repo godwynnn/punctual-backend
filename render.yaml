@@ -1,0 +1,17 @@
+services:
+  - type: web
+    plan: free
+    name: qrmarket
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn core.wsgi:application"
+  
+    envVars:
+    - key: DJANGO_SETTINGS_MODULE
+      value: core.settings
+    - key: ENV
+      value: prod
+    - key: BACKEND_URL
+      value: https://qrmarket.onrender.com
+
+    
