@@ -43,6 +43,26 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         serializer = EmployeeAttendanceSerializer(attendances, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['GET'], url_path='employees')
+    def list_employees(self, request):
+        organizations = Organization.objects.filter(owner=request.user)
+        from employee.models import Employee
+        employees = Employee.objects.filter(organization__in=organizations)
+        
+        data = []
+        for emp in employees:
+            data.append({
+                'id': emp.id,
+                'name': f"{emp.user.first_name} {emp.user.last_name}".strip() or emp.user.email,
+                'email': emp.user.email,
+                'position': emp.position,
+                'department': emp.department,
+                'status': emp.status,
+                'organization_id': emp.organization.id,
+                'organization_name': emp.organization.name
+            })
+        return Response(data)
+
 def empty_stream():
     yield ": keep-alive\n\n"
 
