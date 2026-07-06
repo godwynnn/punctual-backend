@@ -3,6 +3,16 @@
 import os
 import sys
 
+# Hotfix for GooglePlusAuth import issue in older python-social-auth / drf-social-oauth2
+try:
+    import social_core.backends.google as google_backend
+    if not hasattr(google_backend, 'GooglePlusAuth'):
+        class GooglePlusAuth:
+            pass
+        google_backend.GooglePlusAuth = GooglePlusAuth
+except ImportError:
+    pass
+
 
 def main():
     """Run administrative tasks."""
