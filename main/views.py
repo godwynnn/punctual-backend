@@ -212,17 +212,21 @@ def invite_employee(request):
     )
     
     subject = f'Invitation to join {organization.name} on PunctualHr'
-    message = f'Hi {first_name},\n\nYou have been invited to join "{organization.name}" on PunctualHr.\nLog in to your account or register using this email to view your shifts.\n\nBest regards,\nPunctualHr Team'
+    body_text = f'Hi {first_name},\n\nYou have been invited to join "{organization.name}" on PunctualHr.\nLog in to your account or register using this email to view your shifts.\n\nBest regards,\nPunctualHr Team'
+    body_html = f'<p>Hi {first_name},</p><p>You have been invited to join <strong>{organization.name}</strong> on PunctualHr.</p><p>Log in to your account or register using this email to view your shifts.</p><p>Best regards,<br/>PunctualHr Team</p>'
+    
+    from utils.emailsender import sendmail
     try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL or 'noreply@punctualhr.com',
-            [email],
-            fail_silently=True
+        sendmail(
+            RECIPIENT=[email],
+            BODY_TEXT=body_text,
+            BODY_HTML=body_html,
+            SUBJECT=subject,
+            email=settings.EMAIL_HOST_USER or 'noreply@punctualhr.com',
+            name='PunctualHr'
         )
     except Exception as email_err:
-        print(f"Failed to send invite email: {email_err}")
+        print(f"Failed to send invite email via emailsender: {email_err}")
         
     return Response({
         'message': 'Invitation sent successfully.',
