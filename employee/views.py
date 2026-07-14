@@ -266,6 +266,7 @@ def whatsapp_clock_in_out(request):
     # Explicitly set AllowAny permission
     request.user = None
     request.auth = None
+    print(request.data)
     
     if request.method == 'GET':
         mode = request.GET.get('hub.mode')
@@ -307,15 +308,15 @@ def whatsapp_clock_in_out(request):
 
 def handle_button_click(wa_id, button_id):
     from django.core.cache import cache
-    from utils.whatsapp import send_whatsapp_text_message
+    from utils.whatsapp import send_whatsapp_location_request
     
     # Store action in cache for 5 minutes (300 seconds)
     cache.set(f"wa_action_{wa_id}", button_id, timeout=300)
     
     action_label = "Clock In" if button_id == 'clock_in' else "Clock Out"
-    send_whatsapp_text_message(
+    send_whatsapp_location_request(
         wa_id,
-        f"📍 Please share your location to complete your *{action_label}*."
+        f"Tap below to share location and complete your {action_label}."
     )
 
 
@@ -357,6 +358,8 @@ def process_employee_attendance_with_location(wa_id, lat, lng):
     # 3. Retrieve pending action from cache
     button_id = cache.get(f"wa_action_{wa_id}")
     today_date = timezone.localdate()
+    print('button ID ',button_id)
+    print('CAche ',cache)
     
     if not button_id:
         # Fallback if they sent a location without clicking a button first
@@ -493,6 +496,8 @@ def update_profile(request):
     phone_no = request.data.get('phone_no')
     whatsapp_no = request.data.get('whatsapp_no')
 
+    old_whatsapp_no = employee.whatsapp_no
+
     if first_name is not None:
         user.first_name = first_name
     if last_name is not None:
@@ -504,6 +509,13 @@ def update_profile(request):
     if whatsapp_no is not None:
         employee.whatsapp_no = whatsapp_no
         employee.save()
+
+        # Send welcome message if the whatsapp_no is updated to a new non-empty value
+        new_clean = "".join(filter(str.isdigit, whatsapp_no))
+        old_clean = "".join(filter(str.isdigit, old_whatsapp_no)) if old_whatsapp_no else ""
+        if whatsapp_no.strip() != "" and new_clean != old_clean:
+            from utils.whatsapp import send_whatsapp_welcome_template
+            send_whatsapp_welcome_template(whatsapp_no)
 
     from users.serializers import UserSerializer
     return Response({

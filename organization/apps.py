@@ -18,7 +18,7 @@ class OrganizationConfig(AppConfig):
                         send_daily_whatsapp_reminders,
                         trigger=CronTrigger(hour=5, minute=0),
                         # trigger='interval',
-                        # seconds=30,
+                        # seconds=40,
                         id="daily_whatsapp_reminders",
                         replace_existing=True
                     )

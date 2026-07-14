@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def send_daily_whatsapp_reminders():
     logger.info("[Scheduler] Starting daily WhatsApp reminders task.")
     
-    
+    print('sending')
     # Query active employees belonging to organizations with use_social=True
     employees = Employee.objects.filter(
         status='active',
