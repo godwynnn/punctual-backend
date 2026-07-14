@@ -30,7 +30,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'], url_path='create_assign')
     def creating_assign_task(self, request):
-        serializer = CreateTaskSerializer(data=request.data)
+        from django.core.files.uploadedfile import UploadedFile
+        data = request.data.copy()
+        if 'file_attach' in data and isinstance(data['file_attach'], UploadedFile):
+            data.pop('file_attach')
+            
+        serializer = CreateTaskSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         
         org_id = serializer.validated_data['organization_id']
@@ -69,6 +74,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         valid_employees = Employee.objects.filter(id__in=assignee_ids, organization=organization)
         
         from users.models import Notification
+        import django_rq
+        from task.tasks import notify_task_assignment_whatsapp
         assignments = []
         for emp in valid_employees:
             assignment, created = TaskAssignment.objects.get_or_create(task=task, employee=emp)
@@ -81,6 +88,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                     message=f"You have been assigned to task: '{task.title}'",
                     notification_type="task"
                 )
+                try:
+                    django_rq.enqueue(notify_task_assignment_whatsapp, emp.id, task.id)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Failed to enqueue Task WhatsApp notification: {str(e)}")
 
         task_serializer = TaskSerializer(task)
         return Response(task_serializer.data, status=status.HTTP_201_CREATED)
@@ -96,7 +108,12 @@ class TaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer = UpdateTaskSerializer(data=request.data, partial=True)
+        from django.core.files.uploadedfile import UploadedFile
+        data = request.data.copy()
+        if 'file_attach' in data and isinstance(data['file_attach'], UploadedFile):
+            data.pop('file_attach')
+
+        serializer = UpdateTaskSerializer(data=data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         # Update Task Fields
@@ -112,6 +129,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if uploaded_file:
             try:
                 upload_res = upload_to_cloudinary(uploaded_file)
+                # print("uploaded file : ",upload_res)
                 task.file_attach = upload_res['url']
             except Exception as e:
                 return Response({"error": f"Failed to upload file to Cloudinary: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,6 +151,8 @@ class TaskViewSet(viewsets.ModelViewSet):
             TaskAssignment.objects.filter(task=task).exclude(employee__in=valid_employees).delete()
             
             # Add new assignments
+            import django_rq
+            from task.tasks import notify_task_assignment_whatsapp
             for emp in valid_employees:
                 assignment, created = TaskAssignment.objects.get_or_create(task=task, employee=emp)
                 if created:
@@ -143,6 +163,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                         message=f"You have been assigned to task: '{task.title}'",
                         notification_type="task"
                     )
+                    try:
+                        django_rq.enqueue(notify_task_assignment_whatsapp, emp.id, task.id)
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).error(f"Failed to enqueue Task WhatsApp notification: {str(e)}")
                 else:
                     Notification.objects.create(
                         recipient=emp.user,
@@ -179,7 +204,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         employee = request.user.employee
         assignment = get_object_or_404(TaskAssignment, task=task, employee=employee)
 
-        serializer = SubmitAssignmentSerializer(data=request.data)
+        from django.core.files.uploadedfile import UploadedFile
+        data = request.data.copy()
+        if 'file_attach' in data and isinstance(data['file_attach'], UploadedFile):
+            data.pop('file_attach')
+
+        serializer = SubmitAssignmentSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         assignment.status = serializer.validated_data.get('status', 'completed')

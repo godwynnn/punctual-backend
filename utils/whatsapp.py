@@ -273,3 +273,75 @@ def send_whatsapp_welcome_template(recipient_phone):
         except Exception as e:
             logger.error(f"[WhatsApp] Failed to send welcome template to {recipient_phone}: {str(e)}")
 
+
+def send_task_assignment_whatsapp_notification(employee, task):
+    recipient_phone = employee.whatsapp_no
+    if not recipient_phone:
+        logger.warning(f"[WhatsApp] Employee {employee.id} has no WhatsApp number configured.")
+        return
+
+    # Clean recipient phone number (remove leading +, other non-digits)
+    if recipient_phone.startswith("+"):
+        recipient_phone = recipient_phone[1:]
+    recipient_phone = "".join(filter(str.isdigit, recipient_phone))
+
+    due_date_str = "Not specified"
+    if task.due_date:
+        from django.utils import timezone
+        local_due = timezone.localtime(task.due_date)
+        due_date_str = local_due.strftime("%Y-%m-%d %I:%M %p")
+
+    # Message text
+    message_body = (
+        f"📋 *New Task Assigned*\n\n"
+        f"*Title:* {task.title}\n"
+        f"*Description:* {task.description or 'No description'}\n"
+        f"*Due Date:* {due_date_str}"
+    )
+    if task.file_attach:
+        message_body += f"\n*File:* {task.file_attach}"
+    if task.link_attach:
+        message_body += f"\n*Link:* {task.link_attach}"
+
+    # Print to console for development
+    print("\n" + "="*50)
+    print(f"--- WHATSAPP TASK ASSIGNMENT NOTIFICATION SENT TO {employee.whatsapp_no} ---")
+    try:
+        print(message_body)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or 'ascii'
+        print(message_body.encode(encoding, errors='replace').decode(encoding))
+    print("="*50 + "\n")
+
+    # Meta Cloud API Send Logic
+    phone_number_id = os.getenv("META_WA_PHONE_NUMBER_ID")
+    access_token = os.getenv("META_WA_ACCESS_TOKEN")
+
+    if phone_number_id and access_token:
+        url = f"https://graph.facebook.com/v25.0/{phone_number_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": recipient_phone,
+            "type": "text",
+            "text": {
+                "body": message_body
+            }
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            print(response.status_code)
+            print(response.json())
+            if response.status_code in [200, 201]:
+                logger.info(f"[WhatsApp] Successfully sent task assignment WhatsApp notification to {recipient_phone}.")
+            else:
+                logger.error(f"[WhatsApp] Meta API error (Status {response.status_code}): {response.text}")
+        except Exception as e:
+            logger.error(f"[WhatsApp] Failed to send task assignment notification to {recipient_phone}: {str(e)}")
+
+

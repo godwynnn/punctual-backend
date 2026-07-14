@@ -52,7 +52,7 @@ class CreateTaskSerializer(serializers.Serializer):
         default=[]
     )
     due_date = serializers.DateTimeField(required=False, allow_null=True)
-    file_attach = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    file_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     link_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
 class UpdateTaskSerializer(serializers.Serializer):
@@ -63,11 +63,11 @@ class UpdateTaskSerializer(serializers.Serializer):
         required=False
     )
     due_date = serializers.DateTimeField(required=False, allow_null=True)
-    file_attach = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    file_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     link_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
 class SubmitAssignmentSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=[('in_progress', 'In Progress'), ('completed', 'Completed')], default='completed')
     notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    file_attach = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    file_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     link_attach = serializers.URLField(required=False, allow_blank=True, allow_null=True)
