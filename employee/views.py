@@ -328,7 +328,7 @@ def process_employee_attendance_with_location(wa_id, lat, lng):
     
     # 1. Clean incoming phone number
     incoming_phone = "".join(filter(str.isdigit, wa_id))
-    print(incoming_phone)
+    # print(incoming_phone)
     
     # 2. Lookup employee
     active_employees = Employee.objects.filter(status='active', is_active=True).select_related('user', 'organization')
@@ -358,8 +358,8 @@ def process_employee_attendance_with_location(wa_id, lat, lng):
     # 3. Retrieve pending action from cache
     button_id = cache.get(f"wa_action_{wa_id}")
     today_date = timezone.localdate()
-    print('button ID ',button_id)
-    print('CAche ',cache)
+    # print('button ID ',button_id)
+    # print('CAche ',cache)
     
     if not button_id:
         # Fallback if they sent a location without clicking a button first
